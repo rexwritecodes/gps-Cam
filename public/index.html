@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Target App</title>
-    <link rel="stylesheet" href="page1CSS.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon/icon-192x192.png" type="image/x-icon">
+    <title>Target App - Streaming</title>
+    <link rel="stylesheet" href="../page1CSS.css">
+    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" href="../icon/icon-192x192.png" type="image/x-icon">
 </head>
 <body>
     <div class="container">
@@ -15,12 +15,23 @@
         <button id="stopButton">Stop Capture</button>
         <button id="startGpsButton">Start GPS Tracking</button>
         <button id="stopGpsButton">Stop GPS Tracking</button>
+        <button id="startStreaming">Start Streaming</button>
+        <button id="stopStreaming">Stop Streaming</button>
         <p id="gpsData">GPS Data: Not Available</p>
+        <p id="recordingStatus">Recording Status: Inactive</p>
+        <p id="streamingStatus">Streaming Status: Not Connected</p>
+        <p id="roomId" style="display: none;">Room ID: </p>
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas" style="display: none;"></canvas>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-storage-compat.js"></script>
+    
     <script src="page1JS.js" type="module"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script src="streaming.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js')
@@ -34,6 +45,8 @@
 
         let stream;
         let gpsWatchId;
+        let mediaRecorder;
+        let recordedChunks = [];
 
         document.getElementById('captureButton').addEventListener('click', async () => {
             try {
@@ -90,6 +103,71 @@
                 navigator.geolocation.clearWatch(gpsWatchId);
                 console.log('GPS Tracking stopped.');
                 document.getElementById('gpsData').innerText = 'GPS Data: Not Available';
+            }
+        });
+
+        document.getElementById('startRecording').addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('video').srcObject = stream;
+                
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    
+                    // Get current GPS position
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        
+                        // Create FormData to send video file and GPS data
+                        const formData = new FormData();
+                        formData.append('video', blob, 'recorded-video.webm');
+                        formData.append('latitude', latitude);
+                        formData.append('longitude', longitude);
+                        
+                        try {
+                            const response = await fetch('https://your-cloud-server.com/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                document.getElementById('recordingStatus').innerText = 
+                                    'Recording Status: Upload Successful!';
+                            } else {
+                                throw new Error('Upload failed');
+                            }
+                        } catch (error) {
+                            console.error('Upload Error:', error);
+                            document.getElementById('recordingStatus').innerText = 
+                                'Recording Status: Upload Failed!';
+                        }
+                    });
+                };
+                
+                mediaRecorder.start();
+                document.getElementById('recordingStatus').innerText = 'Recording Status: Active';
+                
+            } catch (error) {
+                console.error('Recording Error:', error);
+                document.getElementById('recordingStatus').innerText = 
+                    'Recording Status: Error starting recording';
+            }
+        });
+
+        document.getElementById('stopRecording').addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                stream.getTracks().forEach(track => track.stop());
+                document.getElementById('video').srcObject = null;
+                recordedChunks = [];
             }
         });
     </script>

@@ -1,0 +1,14 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "offers": {
+      ".read": true,
+      ".write": true
+    },
+    "answers": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Viewer</title>
+    <link rel="stylesheet" href="page1CSS.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Stream Viewer</h1>
+        <input type="text" id="roomInput" placeholder="Enter Room ID">
+        <button id="joinRoom">Join Stream</button>
+        <p id="connectionStatus">Status: Not Connected</p>
+        <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script src="viewer.js"></script>
+</body>
+</html> 
