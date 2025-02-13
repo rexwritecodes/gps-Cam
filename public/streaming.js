@@ -2,16 +2,60 @@ let peerConnection;
 let localStream;
 let roomId;
 
-const socket = io('https://your-actual-server-url.com');
+// Replace with your actual Render.com URL
+const socket = io('https://gps-cam.onrender.com', {
+    reconnectionDelayMax: 10000,
+    reconnection: true,
+    reconnectionAttempts: 10
+});
+
+// Add connection status handlers
+socket.on('connect', () => {
+    console.log('Connected to signaling server');
+    document.getElementById('streamingStatus').textContent = 
+        'Streaming Status: Connected to server';
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Connection Error:', error);
+    document.getElementById('streamingStatus').textContent = 
+        'Streaming Status: Server connection failed';
+});
+
+socket.on('join-room', (room) => {
+    console.log('Joined room:', room);
+});
+
 document.getElementById('startStreaming').addEventListener('click', async () => {
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({ 
-            video: true, 
-            audio: true 
-        });
-        document.getElementById('video').srcObject = localStream;
+        // First check if the browser supports getUserMedia
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Your browser does not support camera/microphone access');
+        }
 
-        // Create a unique room ID
+        // Request permissions with better error handling
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+            video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }, 
+            audio: true 
+        }).catch(err => {
+            if (err.name === 'NotAllowedError') {
+                throw new Error('Camera/Microphone permission denied');
+            } else if (err.name === 'NotFoundError') {
+                throw new Error('No camera/microphone found');
+            } else {
+                throw err;
+            }
+        });
+
+        // If we got the stream, show it
+        const videoElement = document.getElementById('video');
+        videoElement.srcObject = localStream;
+        videoElement.play().catch(e => console.error('Error playing video:', e));
+
+        // Create room ID and show it
         roomId = Math.random().toString(36).substring(7);
         document.getElementById('roomId').textContent = `Room ID: ${roomId}`;
         document.getElementById('roomId').style.display = 'block';
@@ -28,7 +72,7 @@ document.getElementById('startStreaming').addEventListener('click', async () => 
     } catch (error) {
         console.error('Streaming Error:', error);
         document.getElementById('streamingStatus').textContent = 
-            'Streaming Status: Error starting stream';
+            `Streaming Status: ${error.message}`;
     }
 });
 

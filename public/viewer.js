@@ -1,5 +1,5 @@
 let peerConnection;
-const socket = io('https://your-actual-server-url.com');
+const socket = io('https://gps-cam.onrender.com');
 document.getElementById('joinRoom').addEventListener('click', async () => {
     const roomId = document.getElementById('roomInput').value;
     if (!roomId) return;
