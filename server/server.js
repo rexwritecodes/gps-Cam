@@ -14,7 +14,18 @@ const io = new Server(server, {
         credentials: false
     }
 });
+app.get('/', (req, res) => {
+    res.send('Server is running');
+});
 
+
+const socket = io('https://gps-cam.onrender.com', {
+    transports: ['websocket', 'polling'],
+    cors: {
+        origin: "*",
+        credentials: true
+    }
+});
 // Store active rooms
 const rooms = new Map();
 
