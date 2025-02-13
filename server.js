@@ -61,6 +61,15 @@ app.post('/upload', upload.single('video'), async (req, res) => {
     }
 });
 
+
+const socket = io('https://gps-cam.onrender.com', {
+    transports: ['websocket', 'polling'],
+    cors: {
+        origin: "*",
+        credentials: true
+    }
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
