@@ -1,4 +1,4 @@
-const socket = io('https://your-server-url.onrender.com');
+const socket = io('https://gps-cam.onrender.com');
 let peerConnection;
 let localStream;
 let roomId;
