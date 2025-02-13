@@ -1,25 +1,31 @@
+const socket = io('https://your-server-url.onrender.com');
 let peerConnection;
-const socket = io('https://gps-cam.onrender.com');
-document.getElementById('joinRoom').addEventListener('click', async () => {
-    const roomId = document.getElementById('roomInput').value;
-    if (!roomId) return;
+let roomId;
+
+document.getElementById('joinRoom').addEventListener('click', joinRoom);
+
+async function joinRoom() {
+    roomId = document.getElementById('roomInput').value.trim();
+    if (!roomId) {
+        alert('Please enter a Room ID');
+        return;
+    }
 
     initializePeerConnection();
     socket.emit('join-room', roomId);
-    document.getElementById('connectionStatus').textContent = 'Status: Connecting...';
-});
+    document.getElementById('connectionStatus').textContent = 'Connecting...';
+}
 
 function initializePeerConnection() {
     peerConnection = new RTCPeerConnection({
-        iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' }
-        ]
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
     });
 
     peerConnection.ontrack = event => {
         const remoteVideo = document.getElementById('remoteVideo');
         if (remoteVideo.srcObject !== event.streams[0]) {
             remoteVideo.srcObject = event.streams[0];
+            document.getElementById('connectionStatus').textContent = 'Connected';
         }
     };
 
@@ -38,13 +44,7 @@ socket.on('offer', async (data) => {
         await peerConnection.setRemoteDescription(data.offer);
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        
-        socket.emit('answer', {
-            roomId: data.roomId,
-            answer: answer
-        });
-        
-        document.getElementById('connectionStatus').textContent = 'Status: Connected';
+        socket.emit('answer', { roomId: roomId, answer: answer });
     } catch (error) {
         console.error('Error handling offer:', error);
     }
@@ -56,4 +56,9 @@ socket.on('ice-candidate', async (candidate) => {
     } catch (error) {
         console.error('Error adding ICE candidate:', error);
     }
+});
+
+socket.on('broadcaster-disconnected', () => {
+    document.getElementById('connectionStatus').textContent = 'Broadcaster disconnected';
+    document.getElementById('remoteVideo').srcObject = null;
 }); 

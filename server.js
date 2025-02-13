@@ -69,13 +69,21 @@ const io = new Server(server, {
     }
 });
 
+const rooms = new Map();
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     socket.on('join-room', (roomId) => {
         socket.join(roomId);
-        socket.to(roomId).emit('user-connected', socket.id);
-        console.log(`User ${socket.id} joined room ${roomId}`);
+        
+        if (!rooms.has(roomId)) {
+            rooms.set(roomId, { broadcaster: socket.id });
+            console.log('Broadcaster joined room:', roomId);
+        } else {
+            socket.to(rooms.get(roomId).broadcaster).emit('viewer-connected');
+            console.log('Viewer joined room:', roomId);
+        }
     });
 
     socket.on('offer', (data) => {
@@ -83,15 +91,29 @@ io.on('connection', (socket) => {
     });
 
     socket.on('answer', (data) => {
-        socket.to(data.roomId).emit('answer', data);
+        socket.to(data.roomId).emit('answer', data.answer);
     });
 
     socket.on('ice-candidate', (data) => {
-        socket.to(data.roomId).emit('ice-candidate', data);
+        socket.to(data.roomId).emit('ice-candidate', data.candidate);
+    });
+
+    socket.on('leave-room', (roomId) => {
+        socket.leave(roomId);
+        if (rooms.has(roomId) && rooms.get(roomId).broadcaster === socket.id) {
+            socket.to(roomId).emit('broadcaster-disconnected');
+            rooms.delete(roomId);
+        }
     });
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
+        rooms.forEach((value, roomId) => {
+            if (value.broadcaster === socket.id) {
+                socket.to(roomId).emit('broadcaster-disconnected');
+                rooms.delete(roomId);
+            }
+        });
     });
 });
 

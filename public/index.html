@@ -1,17 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Video Recording App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming - Broadcaster</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Video Recording App</h1>
-        <video id="video" autoplay></video>
-        <button id="startRecording">Start Recording</button>
-        <button id="stopRecording">Stop Recording</button>
-        <p id="recordingStatus">Recording Status: Inactive</p>
+        <h1>Video Broadcaster</h1>
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="controls">
+            <button id="startStream">Start Streaming</button>
+            <button id="stopStream">Stop Streaming</button>
+        </div>
+        <div id="roomInfo" class="room-info">
+            <p>Room ID: <span id="roomId">Not created yet</span></p>
+            <p>Status: <span id="streamStatus">Not streaming</span></p>
+        </div>
     </div>
-    
-    <script src="page1JS.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script src="broadcaster.js"></script>
 </body>
 </html>

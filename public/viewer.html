@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Viewer</title>
-    <link rel="stylesheet" href="page1CSS.css">
+    <title>Video Streaming - Viewer</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Stream Viewer</h1>
-        <input type="text" id="roomInput" placeholder="Enter Room ID">
-        <button id="joinRoom">Join Stream</button>
-        <p id="connectionStatus">Status: Not Connected</p>
+        <h1>Video Viewer</h1>
+        <div class="join-form">
+            <input type="text" id="roomInput" placeholder="Enter Room ID">
+            <button id="joinRoom">Join Stream</button>
+        </div>
         <video id="remoteVideo" autoplay playsinline></video>
+        <p>Status: <span id="connectionStatus">Not connected</span></p>
     </div>
-
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
     <script src="viewer.js"></script>
 </body>
