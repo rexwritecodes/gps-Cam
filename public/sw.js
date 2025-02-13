@@ -4,10 +4,9 @@ self.addEventListener('install', (event) => {
             return cache.addAll([
                 '/',
                 '/index.html',
-                '/page1CSS.css',
-                '/page1JS.js',
-                '/streaming.js',
-                '/viewer.js',
+                '/viewer.html',
+                '/styles.css',
+                '/image.png',
                 '/manifest.json'
             ]);
         })
@@ -20,4 +19,18 @@ self.addEventListener('fetch', (event) => {
             return response || fetch(event.request);
         })
     );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== 'v1') {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
 }); 

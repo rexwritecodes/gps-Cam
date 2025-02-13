@@ -3,23 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Streaming - Broadcaster</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>GpsCam</title>
+    <link rel="stylesheet" href="page1CSS.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="image.png" type="image/x-icon">
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/image.png">
+    <link rel="apple-touch-icon" href="/image.png">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="GpsCam">
 </head>
 <body>
     <div class="container">
-        <h1>Video Broadcaster</h1>
-        <video id="localVideo" autoplay playsinline muted></video>
-        <div class="controls">
-            <button id="startStream">Start Streaming</button>
-            <button id="stopStream">Stop Streaming</button>
-        </div>
-        <div id="roomInfo" class="room-info">
-            <p>Room ID: <span id="roomId">Not created yet</span></p>
-            <p>Status: <span id="streamStatus">Not streaming</span></p>
-        </div>
+        <h1>Target GPS and Camera Tracking</h1>
+        <button id="captureButton">Start Capture</button>
+        <button id="stopButton">Stop Capture</button>
+        <button id="startGpsButton">Start GPS Tracking</button>
+        <button id="stopGpsButton">Stop GPS Tracking</button>
+        <p id="gpsData">GPS Data: Not Available</p>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display: none;"></canvas>
     </div>
-    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
-    <script src="broadcaster.js"></script>
+
+    <script src="page1JS.js" type="module"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+
+        let stream;
+        let gpsWatchId;
+
+        document.getElementById('captureButton').addEventListener('click', async () => {
+            try {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+                    document.getElementById('gpsData').innerText = `GPS Data: Latitude ${latitude}, Longitude ${longitude}`;
+
+                    const video = document.getElementById('video');
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+
+                    setTimeout(() => {
+                        const canvas = document.getElementById('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const imageData = canvas.toDataURL('image/png');
+
+                        fetch('https://your-backend-url.com/upload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ latitude, longitude, image: imageData })
+                        })
+                        .then(response => response.json())
+                        .then(data => console.log('Success:', data))
+                        .catch(error => console.error('Error:', error));
+                    }, 2000);
+                }, (error) => console.error('GPS Error:', error));
+            } catch (error) {
+                console.error('Camera Error:', error);
+            }
+        });
+
+        document.getElementById('stopButton').addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                document.getElementById('video').srcObject = null;
+                console.log('Capture stopped.');
+            }
+        });
+
+        document.getElementById('startGpsButton').addEventListener('click', () => {
+            gpsWatchId = navigator.geolocation.watchPosition((position) => {
+                const { latitude, longitude } = position.coords;
+                console.log(`GPS Update: Latitude ${latitude}, Longitude ${longitude}`);
+                document.getElementById('gpsData').innerText = `GPS Data: Latitude ${latitude}, Longitude ${longitude}`;
+            }, (error) => console.error('GPS Tracking Error:', error));
+        });
+
+        document.getElementById('stopGpsButton').addEventListener('click', () => {
+            if (gpsWatchId) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                console.log('GPS Tracking stopped.');
+                document.getElementById('gpsData').innerText = 'GPS Data: Not Available';
+            }
+        });
+    </script>
 </body>
 </html>
