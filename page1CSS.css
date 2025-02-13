@@ -1,0 +1,76 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background-color: #eef2f3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  max-width: 500px;
+  width: 90%;
+  padding: 25px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h1 {
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+#captureButton {
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+}
+
+#stopButton {
+  background: linear-gradient(45deg, #ff7e5f, #feb47b);
+}
+
+#startGpsButton {
+  background: linear-gradient(45deg, #36d1dc, #5b86e5);
+}
+
+#stopGpsButton {
+  background: linear-gradient(45deg, #11998e, #38ef7d);
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+#gpsData {
+  font-size: 14px;
+  color: #555;
+  margin-top: 15px;
+}
+
+video {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
